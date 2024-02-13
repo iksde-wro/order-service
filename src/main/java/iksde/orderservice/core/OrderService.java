@@ -5,6 +5,7 @@ import iksde.orderservice.adapter.OrderRepository;
 import iksde.orderservice.adapter.PaymentApi;
 import iksde.orderservice.adapter.TicketApi;
 import iksde.orderservice.core.exception.OrderCancellationException;
+import iksde.orderservice.core.exception.OrderNotFoundException;
 import iksde.orderservice.core.exception.TicketNotFoundException;
 import iksde.orderservice.core.model.Order;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,12 @@ public class OrderService implements OrderApi {
     private final PaymentApi paymentApi;
     private final TicketApi ticketApi;
     private final OrderRepository orderRepo;
+
+    @SneakyThrows
+    @Override
+    public Order get(Long id) {
+       return orderRepo.findById(id).orElseThrow(() -> new OrderNotFoundException(String.format("Order with ID %d not found", id)));
+    }
 
     @SneakyThrows
     @Override
