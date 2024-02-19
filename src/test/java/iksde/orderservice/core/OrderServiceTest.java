@@ -4,7 +4,6 @@ import iksde.orderservice.adapter.AccountApi;
 import iksde.orderservice.adapter.OrderRepository;
 import iksde.orderservice.adapter.PaymentApi;
 import iksde.orderservice.adapter.TicketApi;
-import iksde.orderservice.core.exception.OrderCancellationException;
 import iksde.orderservice.core.exception.OrderNotFoundException;
 import iksde.orderservice.core.exception.TicketNotFoundException;
 import iksde.orderservice.core.model.Order;
@@ -262,7 +261,7 @@ class OrderServiceTest {
                 .when(ticketApi.verify(TICKET_ID))
                 .thenReturn(false);
 
-        Assertions.assertThrows(OrderCancellationException.class, () -> orderService.cancel(ACCOUNT_ID, PAYMENT_ID, TICKET_ID));
+        Assertions.assertThrows(OrderNotFoundException.class, () -> orderService.cancel(ACCOUNT_ID, PAYMENT_ID, TICKET_ID));
     }
 
     @SneakyThrows

@@ -4,7 +4,6 @@ import iksde.orderservice.adapter.AccountApi;
 import iksde.orderservice.adapter.OrderRepository;
 import iksde.orderservice.adapter.PaymentApi;
 import iksde.orderservice.adapter.TicketApi;
-import iksde.orderservice.core.exception.OrderCancellationException;
 import iksde.orderservice.core.exception.OrderNotFoundException;
 import iksde.orderservice.core.exception.TicketNotFoundException;
 import iksde.orderservice.core.model.Order;
@@ -23,7 +22,13 @@ public class OrderService implements OrderApi {
     @SneakyThrows
     @Override
     public Order get(Long id) {
-       return orderRepo.findById(id).orElseThrow(() -> new OrderNotFoundException(String.format("Order with ID %d not found", id)));
+        return orderRepo.findById(id).orElseThrow(() -> new OrderNotFoundException(String.format("Order with ID %d not found", id)));
+    }
+
+    @SneakyThrows
+    @Override
+    public Order getByIds(Long accountId, Long paymentId, Long ticketId) {
+        return orderRepo.getByIds(accountId, paymentId, ticketId).orElseThrow(() -> new OrderNotFoundException(String.format("Order with ID %d not found", accountId)));
     }
 
     @SneakyThrows
@@ -68,17 +73,12 @@ public class OrderService implements OrderApi {
     @Override
     @SneakyThrows
     public Order cancel(Long accountId, Long paymentId, Long ticketId) {
-        if (orderRepo.getByIds(accountId, paymentId, ticketId).isPresent()) {
-            try {
-                paymentApi.cancel(paymentId);
-                ticketApi.cancel(ticketId);
-                orderRepo.updateStatus(accountId, paymentId, ticketId, Order.Status.CANCELED);
-            } catch (Exception e) {
-                throw new OrderCancellationException("Failed to cancel order. Reason: " + e.getMessage());
-            }
-            return orderRepo.getByIds(accountId, paymentId, ticketId).orElseThrow(() -> new OrderCancellationException("Failed to retrieve canceled order details."));
-        } else {
-            throw new OrderCancellationException("Order not found");
-        }
+        return orderRepo.getByIds(accountId, paymentId, ticketId)
+                .map(order -> {
+                    paymentApi.cancel(paymentId);
+                    ticketApi.cancel(ticketId);
+                    return orderRepo.save(new Order(order.getOrderId(), order.getAccountId(), order.getPaymentId(), order.getTicketId(), Order.Status.CANCELED));
+                })
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
     }
 }
