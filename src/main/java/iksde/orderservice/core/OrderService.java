@@ -72,6 +72,18 @@ public class OrderService implements OrderApi {
 
     @Override
     @SneakyThrows
+    public Order cancel(Long id) {
+        return orderRepo.findById(id)
+                .map(order -> {
+                    paymentApi.cancel(order.getPaymentId());
+                    ticketApi.cancel(order.getPaymentId());
+                    return orderRepo.save(new Order(order.getOrderId(), order.getAccountId(), order.getPaymentId(), order.getTicketId(), Order.Status.CANCELED));
+                })
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+    }
+
+    @Override
+    @SneakyThrows
     public Order cancel(Long accountId, Long paymentId, Long ticketId) {
         return orderRepo.getByIds(accountId, paymentId, ticketId)
                 .map(order -> {
