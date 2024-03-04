@@ -6,9 +6,11 @@ public interface OrderApi {
 
     Order get(Long id);
 
-    Order getByIds(Long accountId, Long paymentId, Long tickerId);
+    Order getByIds(Long accountId, Long paymentId, Long ticketId);
 
-    Order save(Long accountId, Long paymentId, Long tickerId);
+    Order save(Long accountId, Long paymentId, Long ticketId);
 
-    Order cancel(Long accountId, Long paymentId, Long tickerId);
+    Order cancel(Long accountId, Long paymentId, Long ticketId);
+
+    Order cancel(Long id);
 }
