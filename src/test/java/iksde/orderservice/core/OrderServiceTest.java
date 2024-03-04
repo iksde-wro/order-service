@@ -4,7 +4,7 @@ import iksde.orderservice.adapter.AccountApi;
 import iksde.orderservice.adapter.OrderRepository;
 import iksde.orderservice.adapter.PaymentApi;
 import iksde.orderservice.adapter.TicketApi;
-import iksde.orderservice.core.exception.OrderCancellationException;
+import iksde.orderservice.core.exception.OrderNotFoundException;
 import iksde.orderservice.core.exception.TicketNotFoundException;
 import iksde.orderservice.core.model.Order;
 import lombok.SneakyThrows;
@@ -261,6 +261,33 @@ class OrderServiceTest {
                 .when(ticketApi.verify(TICKET_ID))
                 .thenReturn(false);
 
-        Assertions.assertThrows(OrderCancellationException.class, () -> orderService.cancel(ACCOUNT_ID, PAYMENT_ID, TICKET_ID));
+        Assertions.assertThrows(OrderNotFoundException.class, () -> orderService.cancel(ACCOUNT_ID, PAYMENT_ID, TICKET_ID));
+    }
+
+    @SneakyThrows
+    @Test
+    @org.junit.jupiter.api.Order(16)
+    void getOrderTest() {
+        OrderService orderService = setUp();
+        Assertions.assertThrows(OrderNotFoundException.class, () -> orderService.get(1L));
+    }
+
+    @SneakyThrows
+    @Test
+    @org.junit.jupiter.api.Order(17)
+    void getOrderWhenOrderIsAbsentTest() {
+        OrderService orderService = setUp();
+        Order orderExpected = new Order(1L, ACCOUNT_ID, PAYMENT_ID, TICKET_ID, Order.Status.DELIVERED);
+        orderRepository.save(orderExpected);
+
+        Order orderActual = orderService.get(orderExpected.getOrderId());
+
+        Assertions.assertEquals(orderExpected.getOrderId(), orderActual.getOrderId());
+        Assertions.assertEquals(orderExpected.getAccountId(), orderActual.getAccountId());
+        Assertions.assertEquals(orderExpected.getPaymentId(), orderActual.getPaymentId());
+        Assertions.assertEquals(orderExpected.getTicketId(), orderActual.getTicketId());
+        Assertions.assertEquals(orderExpected.getStatus(), orderActual.getStatus());
+
+        orderRepository.deleteAll();
     }
 }
